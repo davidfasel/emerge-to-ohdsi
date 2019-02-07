@@ -88,8 +88,6 @@ for i, line in enumerate(input_file_reader):
 
     # create a dictionary based on the eMERGE CPT fields
     eMergeData = helper.getEmergeFields(eMERGE_fields, line)
-    # get the eMERGE BMI fields
-    # subjid, bmi_observation_age, weight, height, bmi, visit_number = fields
 
     # figure out an approx date based on the age of the participant
     # discard line if age isn't present because OHDSI requires a date.
@@ -102,20 +100,20 @@ for i, line in enumerate(input_file_reader):
 
     # Fill in the output fields that we know from the OHDSI data.
     # Each of the 3 measurements get their own row.
-    for row in ('weight', 'height', 'bmi'):
+    for type in ('weight', 'height', 'bmi'):
+        if not helper.validateNotMissing(eMergeData[type]):
+            continue
+
         OMOP_fields_dict['person_id'] = eMergeData['subjid']
         OMOP_fields_dict['measurement_date'] = measurement_date
         OMOP_fields_dict['visit_occurrence_id'] = eMergeData['visit_number']
-        OMOP_fields_dict['measurement_concept_id'] = bmi_fields[row]['measurement_concept_id']
-        OMOP_fields_dict['measurement_type_concept_id'] = bmi_fields[row]['measurement_type_concept_id']
-        OMOP_fields_dict['unit_source_value'] = bmi_fields[row]['unit_source_value']
-
-        if row == 'weight':
-            OMOP_fields_dict['value_as_number'] = eMergeData['weight']
-        elif row == 'height':
-            OMOP_fields_dict['value_as_number'] = eMergeData['height']
-        elif row == 'bmi':
-            OMOP_fields_dict['value_as_number'] = eMergeData['bmi']
+        OMOP_fields_dict['value_as_number'] = eMergeData[type]
+        OMOP_fields_dict['measurement_concept_id'] = \
+          bmi_fields[type]['measurement_concept_id']
+        OMOP_fields_dict['measurement_type_concept_id'] = \
+          bmi_fields[type]['measurement_type_concept_id']
+        OMOP_fields_dict['unit_source_value'] = \
+          bmi_fields[type]['unit_source_value']
 
         helper.writeToOutputFile(OMOP_fields, OMOP_fields_dict, output_file)
         # output = []

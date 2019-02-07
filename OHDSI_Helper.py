@@ -38,7 +38,8 @@ def getOmopDictionary(OMOP_fields):
 def getEmergeFields(eMERGE_fields, line):
     eMERGE_fields_dict = {}
     for i, field in enumerate(eMERGE_fields):
-        eMERGE_fields_dict[field] = line[i]
+        value = re.sub('^.$', '', line[i]) #convert . to empty string
+        eMERGE_fields_dict[field] = value
     return eMERGE_fields_dict
 
 # check that the age is a valid float then add to year of birth
@@ -51,7 +52,7 @@ def getDate(subjid, age, years_of_birth):
     return date
 
 def validateNotMissing(data):
-    if data == '' or data == '.':
+    if not data or data == '' or data == '.':
         return False
     return True
 
