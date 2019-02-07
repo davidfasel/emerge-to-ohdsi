@@ -1,7 +1,7 @@
 import os, sys, re
 import argparse
 import csv
-import OHDSI_Helper
+import OHDSI_Helper as helper
 
 
 parser = argparse.ArgumentParser(
@@ -15,6 +15,10 @@ parser.add_argument(
   '--demo', '-d', required=True, metavar= 'path', type= argparse.FileType('r'),
   help = '''A file containing the demographics to extract year of birth to
             calculate drug start date.'''
+)
+parser.add_argument(
+    '-t', '--test',  metavar='lines',  #action='store_true',
+    help = 'Only process the first n lines'
 )
 args =  parser.parse_args()
 
@@ -64,51 +68,58 @@ eMERGE_fields = \
   ('subjid', 'bmi_observation_age', 'weight', 'height', 'bmi', 'visit_number')
 
 # set all the output fields to empty string initially
-OMOP_fields_dict = OHDSI_Helper.getOmopDictionary(OMOP_fields)
+OMOP_fields_dict = helper.getOmopDictionary(OMOP_fields)
 
 # get the birth years from the demographics files
-years_of_birth = OHDSI_Helper.getYearsOfBirth(args.demo)
+years_of_birth = helper.getYearsOfBirth(args.demo)
 
 # get input csv reader and output file
 input_file_reader, output_file = \
-  OHDSI_Helper.openFiles(args.input_file, '/OHDSI_output', header=OMOP_fields)
+  helper.openFiles(args.input_file, '/OHDSI_output', header=OMOP_fields)
+
+# skip the header
+input_file_reader.next()
 
 # read the input file
 for i, line in enumerate(input_file_reader):
     # print the line number of the input file
-    print('\r%s' % (i+1)),
+    if (helper.printLineNumber(i, args.test) == False):
+        sys.exit()
 
-    # convert "." (missing) to empty string (db null)
-    fields = map(lambda x: re.sub('^\.$', '', x), line)
+    # create a dictionary based on the eMERGE CPT fields
+    eMergeData = helper.getEmergeFields(eMERGE_fields, line)
     # get the eMERGE BMI fields
-    subjid, bmi_observation_age, weight, height, bmi, visit_number = fields
+    # subjid, bmi_observation_age, weight, height, bmi, visit_number = fields
 
     # figure out an approx date based on the age of the participant
     # discard line if age isn't present because OHDSI requires a date.
-    measurement_date = \
-      OHDSI_Helper.getDate(subjid, bmi_observation_age, years_of_birth)
+    measurement_date = helper.getDate(
+      eMergeData['subjid'], eMergeData['bmi_observation_age'], years_of_birth
+    )
     if (not measurement_date):
+        helper.printLineError(i, eMergeData)
         continue
 
     # Fill in the output fields that we know from the OHDSI data.
     # Each of the 3 measurements get their own row.
     for row in ('weight', 'height', 'bmi'):
-        OMOP_fields_dict['person_id'] = subjid
+        OMOP_fields_dict['person_id'] = eMergeData['subjid']
         OMOP_fields_dict['measurement_date'] = measurement_date
-        OMOP_fields_dict['visit_occurrence_id'] = visit_number
+        OMOP_fields_dict['visit_occurrence_id'] = eMergeData['visit_number']
         OMOP_fields_dict['measurement_concept_id'] = bmi_fields[row]['measurement_concept_id']
         OMOP_fields_dict['measurement_type_concept_id'] = bmi_fields[row]['measurement_type_concept_id']
         OMOP_fields_dict['unit_source_value'] = bmi_fields[row]['unit_source_value']
 
         if row == 'weight':
-            OMOP_fields_dict['value_as_number'] = weight
+            OMOP_fields_dict['value_as_number'] = eMergeData['weight']
         elif row == 'height':
-            OMOP_fields_dict['value_as_number'] = height
+            OMOP_fields_dict['value_as_number'] = eMergeData['height']
         elif row == 'bmi':
-            OMOP_fields_dict['value_as_number'] = bmi
+            OMOP_fields_dict['value_as_number'] = eMergeData['bmi']
 
-        output = []
-        for field in OMOP_fields:
-            output.append(OMOP_fields_dict[field])
-
-        output_file.write(','.join(output) + '\n')
+        helper.writeToOutputFile(OMOP_fields, OMOP_fields_dict, output_file)
+        # output = []
+        # for field in OMOP_fields:
+        #     output.append(OMOP_fields_dict[field])
+        #
+        # output_file.write(','.join(output) + '\n')

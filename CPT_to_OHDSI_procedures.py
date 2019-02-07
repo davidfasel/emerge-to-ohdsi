@@ -77,12 +77,4 @@ for i, line in enumerate(input_file_reader):
       'C4:'+ eMergeData['cpt_code']
 
     #OMOP_fields_dict['procedure_source_concept_id'] = '0''
-
-    output = []
-    for field in OMOP_fields:
-        output.append(OMOP_fields_dict[field])
-
-    try:
-        output_file.write(','.join(output) + '\n')
-    except:
-        helper.printLineError(i, output)
+    helper.writeToOutputFile(OMOP_fields, OMOP_fields_dict, output_file)

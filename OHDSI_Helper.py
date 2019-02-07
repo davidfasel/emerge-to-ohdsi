@@ -66,3 +66,13 @@ def printLineNumber (line_number, line_limit):
 
 def printLineError(line_number, data):
     print "Invalid line:", line_number + 1, "Values:", data
+
+def writeToOutputFile(OMOP_fields, OMOP_fields_dict, output_file):
+    output = []
+    for field in OMOP_fields:
+        output.append(OMOP_fields_dict[field])
+
+    try:
+        output_file.write(','.join(output) + '\n')
+    except:
+        printLineError(i, output)
