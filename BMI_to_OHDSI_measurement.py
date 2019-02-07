@@ -60,6 +60,9 @@ bmi_fields = {
   }
 }
 
+eMERGE_fields = \
+  ('subjid', 'bmi_observation_age', 'weight', 'height', 'bmi', 'visit_number')
+
 # set all the output fields to empty string initially
 OMOP_fields_dict = OHDSI_Helper.getOmopDictionary(OMOP_fields)
 
