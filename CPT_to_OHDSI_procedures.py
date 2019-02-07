@@ -70,12 +70,13 @@ for i, line in enumerate(input_file_reader):
 
     # fill in the output fields that we know from the OHDSI data
     OMOP_fields_dict['person_id'] = eMergeData['subjid']
-    #OMOP_procedure_fields[procedure_concept_id} = xxx
+    OMOP_fields_dict['procedure_concept_id'] = '0'
     OMOP_fields_dict['procedure_date'] = procedure_date
+    OMOP_fields_dict['procedure_type_concept_id'] = '0'
     OMOP_fields_dict['procedure_source_value'] = \
       'C4:'+ eMergeData['cpt_code']
 
-    #OMOP_procedure_fields{procedure_source_concept_id} = xxx
+    #OMOP_fields_dict['procedure_source_concept_id'] = '0''
 
     output = []
     for field in OMOP_fields:

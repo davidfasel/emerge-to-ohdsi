@@ -20,7 +20,7 @@ exec ('BULK INSERT ' + @table +
 -- Redo the above exec statements for these tables! --
 
 -- CPT (procedures)
-declare @table varchar(255) = 'emerge_network_procedure_occurence_exposure';
+declare @table varchar(255) = 'emerge_network_procedure_occurrence';
 declare @import_fie varchar(255) = 'EMERGESEQ_CPT.OHDSI.csv';
 
 --  Meds (drugs)
