@@ -51,6 +51,7 @@ WHERE concept_code IN (
 )
 AND concept_name LIKE '%statin%'
 
+
 -- @todo replace this with proper create statements
 -- create all the OHDSI tables based on an existing OHDSI database
 -- this is MSSQL specific
